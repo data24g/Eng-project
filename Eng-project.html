@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Giới thiệu đội ngũ</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --blue:#f2b98a;
+    --ink:#2b130b;
+    --text:#40302a;
+    --green:#f7b733;
+    --deep:#c8431f;
+    --paper:#fffaf4;
+    --ease:cubic-bezier(.65,0,.25,1);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:"Noto Sans",Arial,sans-serif;background:var(--paper);color:var(--text)}
+
+  .viewport{position:relative;width:100%;aspect-ratio:16/9;overflow:hidden;
+    background:var(--paper);container-type:inline-size;touch-action:pan-y;user-select:none}
+
+  /* ---- Khung cố định (không chuyển động) ---- */
+  .logo{position:absolute;left:2.9cqw;top:1.6cqw;font-size:2.6cqw;font-style:italic;
+    letter-spacing:.9cqw;font-weight:500;z-index:5;
+    background:linear-gradient(90deg,var(--green),var(--deep));
+    -webkit-background-clip:text;background-clip:text;color:transparent}
+  .blue-top{position:absolute;right:0;top:0;width:25.7%;height:21.5cqw;background:var(--blue)}
+  .band{position:absolute;left:0;right:0;top:46.5%;height:9.5%;background:var(--blue)}
+  .bar1{position:absolute;left:3.5%;top:66%;width:3.3%;height:34%;background:var(--green)}
+  .bar2{position:absolute;left:8%;top:66%;width:19.8%;height:34%;
+    background:linear-gradient(90deg,var(--green),var(--deep))}
+
+  /* ---- Khung ảnh: mỗi khung chứa ảnh của cả 4 người, chỉ 1 ảnh hiện ---- */
+  .slot{position:absolute;overflow:hidden;background:#d9cfc6}
+  .slot img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center center;
+    display:block;opacity:0;transform:scale(1.12);
+    transition:opacity .9s var(--ease),transform 1.1s var(--ease)}
+  .slot img.on{opacity:1;transform:scale(1)}
+  .slot.main{left:5.5%;top:8.5%;width:22%;height:57.5%;z-index:2}
+  .slot.s1{left:31%;top:4%;width:18%;height:40%;cursor:pointer}
+  .slot.s2{left:52%;top:4%;width:18%;height:40%;cursor:pointer}
+  .slot.s3{left:73%;top:4%;width:18%;height:40%;cursor:pointer}
+
+  /* ---- Thông tin từng người ---- */
+  .info{position:absolute;inset:0;pointer-events:none;visibility:hidden}
+  .info.on{visibility:visible}
+  .info .title,.info .sub,.info .desc{opacity:0;transform:translateY(14px);
+    transition:opacity .5s ease,transform .5s ease}
+  .info.on .title,.info.on .sub,.info.on .desc{opacity:1;transform:none;
+    transition:opacity .8s ease,transform .8s var(--ease)}
+  .info.on .title{transition-delay:.35s}
+  .info.on .sub{transition-delay:.5s}
+  .info.on .desc{transition-delay:.65s}
+  .info.leaving{visibility:visible}
+  /* Tên + chức danh nằm trong dải màu; phần giới thiệu nằm dưới dải, căn trái */
+  .head{position:absolute;left:31%;right:4.5%;top:46.5%;height:9.5%;
+    display:flex;align-items:center;justify-content:space-between;gap:2cqw}
+  .title{font-weight:500;font-size:3.5cqw;line-height:1.15;color:var(--ink);white-space:nowrap}
+  .sub{font-weight:500;font-size:1.8cqw;letter-spacing:.3cqw;color:var(--ink);white-space:nowrap}
+  .desc{position:absolute;left:31%;right:5.5%;top:60.5%;
+    font-size:1.5cqw;line-height:1.7;color:var(--text);
+    border-left:.35cqw solid var(--deep);padding-left:1.6cqw}
+
+  /* ---- Điều khiển ---- */
+  .dot:focus-visible,.slot:focus-visible{outline:3px solid var(--ink);outline-offset:2px}
+  .dots{position:absolute;left:31%;bottom:3%;display:flex;gap:.9cqw;z-index:10}
+  .dot{width:1.1cqw;height:1.1cqw;min-width:9px;min-height:9px;border-radius:50%;border:0;cursor:pointer;
+    background:rgba(200,67,31,.28);transition:all .3s}
+  .dot.on{background:var(--deep);width:3cqw;border-radius:1cqw}
+
+  /* ---- Ảnh "bay" từ khung này sang khung khác ---- */
+  .flyer{position:absolute;z-index:6;overflow:hidden;pointer-events:none;background:#d9cfc6;
+    box-shadow:0 1cqw 3cqw rgba(60,20,0,.28);
+    transition:left 1s var(--ease),top 1s var(--ease),width 1s var(--ease),height 1s var(--ease)}
+  .flyer img{width:100%;height:100%;object-fit:cover;object-position:center center;display:block}
+  .slot.hold img{opacity:0 !important;transition:none !important}
+  .slot.snap img,.slot img.gone{transition:none !important}
+  .slot img.gone{opacity:0 !important}
+
+  @media (prefers-reduced-motion:reduce){
+    .slot img,.info .title,.info .sub,.info .desc,.flyer{transition:none !important}
+  }
+
+  /* ---- Nội dung dự án: đơn giản, một màu nhấn ---- */
+  .page{max-width:1200px;margin:0 auto;padding:0 clamp(14px,3vw,32px)}
+
+  .intro{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:clamp(20px,4vw,56px);
+    align-items:start;padding:clamp(28px,5vw,56px) 0 clamp(24px,4vw,44px)}
+  .intro h1{font-weight:500;font-size:clamp(1.7rem,3.4vw,2.8rem);line-height:1.15;color:var(--ink)}
+  .intro p{font-size:clamp(1rem,1.25vw,1.1rem);line-height:1.75;color:var(--text)}
+
+  .steps{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:clamp(20px,3vw,44px);
+    padding:clamp(24px,3.5vw,40px) 0 clamp(36px,6vw,72px)}
+  .step{border-top:1px solid rgba(43,19,11,.25);padding-top:18px}
+  .step .n{display:block;font-size:.95rem;font-weight:500;color:var(--deep);margin-bottom:8px}
+  .step h2{font-weight:500;font-size:clamp(1.2rem,1.8vw,1.5rem);color:var(--ink);margin-bottom:10px}
+  .step p{font-size:clamp(.95rem,1.1vw,1.04rem);line-height:1.75;color:var(--text)}
+
+  @media (max-width:760px){
+    .intro{grid-template-columns:1fr;gap:16px}
+    .steps{grid-template-columns:1fr}
+  }
+</style>
+</head>
+<body>
+<main class="page">
+<header class="intro">
+  <h1>How is AI changing the future of education: Perspectives from FPT university lecturers & student.</h1>
+  <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</p>
+</header>
+
+<section class="viewport" id="vp" aria-roledescription="carousel" aria-label="Giới thiệu đội ngũ">
+  <div class="logo" id="logo"></div>
+  <div class="blue-top"></div>
+  <div class="band"></div>
+  <div class="bar1"></div>
+  <div class="bar2"></div>
+
+  <div class="slot s1" id="s1" tabindex="0" role="button" aria-label="Xem người tiếp theo"></div>
+  <div class="slot s2" id="s2" tabindex="0" role="button" aria-label="Xem người thứ ba"></div>
+  <div class="slot s3" id="s3" tabindex="0" role="button" aria-label="Xem người thứ tư"></div>
+  <div class="slot main" id="main"></div>
+
+  <div id="infos"></div>
+
+  <div class="dots" id="dots"></div>
+</section>
+
+<section class="steps" aria-label="Dự án">
+  <article class="step">
+    <span class="n">1</span>
+    <h2>Method</h2>
+    <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</p>
+  </article>
+  <article class="step">
+    <span class="n">2</span>
+    <h2>Findings</h2>
+    <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</p>
+  </article>
+  <article class="step">
+    <span class="n">3</span>
+    <h2>Final product</h2>
+    <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</p>
+  </article>
+</section>
+</main>
+
+<script>
+/* ====== SỬA THÔNG TIN 4 NGƯỜI Ở ĐÂY ======
+   photo: link ảnh người (ảnh dọc, mặt ở phần trên sẽ đẹp nhất)
+   Khung lớn bên trái = người đang giới thiệu.
+   Ba khung ảnh phía trên = 3 người còn lại, theo thứ tự sẽ được giới thiệu tiếp. */
+var LOGO = "LOGO";
+var PEOPLE = [
+  { name:"Đoàn Nam Hải",  role:"Leader",
+    photo:"https://drive.google.com/thumbnail?id=1K_RWB7rHxzQMrN9F6p6bPdwkAL4IRSXl&sz=w1000",
+    desc:"Hello! My name is Doan Nam Hai, and I am 18 years old. I am a creative person who enjoys art, drawing, and exploring new ideas. I am particularly interested in digital art and animation because I love expressing emotions and telling stories through visuals. I also enjoy learning about technology and how AI can make our lives and education better. I hope to develop my skills, gain new experiences, and create something meaningful in the future." },
+  { name:"Lý Anh Huy",   role:"Member",
+    photo:"https://drive.google.com/thumbnail?id=1KWGyFbtn2CLYi-CaCUXEQxFD9wEBi0P1&sz=w1000",
+    desc:"Hello! My name is Ly Anh Huy. I enjoy playing badminton and going to the gym in my free time. I study English because I want to talk to people from other countries and get a good job in the future." },
+  { name:"Nguyễn Việt Tiến",   role:"Member",
+    photo:"https://drive.google.com/thumbnail?id=1a5h2OoJnltEYGIJNBT4RwZGUn3x9ujA-&sz=w1000",
+    desc:"Hello! My name is Nguyen Viet Tien. I am 17 years old and I come from Ninh Binh, Vietnam. I enjoy playing badminton and going to the gym in my free time. I study English because I want to communicate confidently with people from different countries and broaden my career opportunities in the future." },
+  { name:"Lý Tuấn Trường",    role:"Member",
+    photo:"https://drive.google.com/thumbnail?id=1W0stk341jK2Wkh2P0amCiHfdzdkVwU8f&sz=w1000",
+    desc:"Hello! My name is Ly Tuan Truong. I am 19 years old. I come from Hanoi. I like playing games and listening to music in my free time. I study English because I want to talk to people from other countries and get a good job in the future" }
+];
+var AUTO_MS = 5000; /* thời gian tự chuyển (ms); đặt 0 để tắt */
+
+/* ====== MÃ CHẠY - KHÔNG CẦN SỬA ====== */
+var N = PEOPLE.length, cur = 0, timer = null;
+var vp = document.getElementById('vp');
+document.getElementById('logo').textContent = LOGO;
+var slots = [
+  { el:document.getElementById('main'), off:0 },
+  { el:document.getElementById('s1'),   off:1 },
+  { el:document.getElementById('s2'),   off:2 },
+  { el:document.getElementById('s3'),   off:3 }
+];
+var infos = document.getElementById('infos'), dotsEl = document.getElementById('dots');
+
+slots.forEach(function(s){
+  PEOPLE.forEach(function(p){
+    var im = document.createElement('img'); im.src = p.photo; im.alt = ''; s.el.appendChild(im);
+  });
+});
+PEOPLE.forEach(function(p,i){
+  var d = document.createElement('div'); d.className = 'info';
+  d.innerHTML = '<div class="head"><h2 class="title">'+p.name+'</h2><p class="sub">'+p.role+'</p></div><p class="desc">'+p.desc+'</p>';
+  infos.appendChild(d);
+  var b = document.createElement('button'); b.className = 'dot';
+  b.setAttribute('aria-label','Xem '+p.name);
+  b.onclick = function(){ go(i); restart(); };
+  dotsEl.appendChild(b);
+});
+
+var prevIdx = -1, flights = [];
+var reduce = window.matchMedia && matchMedia('(prefers-reduced-motion:reduce)').matches;
+
+function snap(el, cls){ el.classList.add(cls); }
+function unsnap(el, cls){ requestAnimationFrame(function(){ requestAnimationFrame(function(){ el.classList.remove(cls); }); }); }
+function finishFlights(){
+  flights.forEach(function(f){
+    clearTimeout(f.t);
+    if(f.fly.parentNode) f.fly.parentNode.removeChild(f.fly);
+    snap(f.slot.el,'snap'); f.slot.el.classList.remove('hold'); unsnap(f.slot.el,'snap');
+  });
+  flights = [];
+}
+function relRect(el){
+  var r = el.getBoundingClientRect(), v = vp.getBoundingClientRect();
+  return { l:(r.left-v.left)/v.width*100, t:(r.top-v.top)/v.height*100, w:r.width/v.width*100, h:r.height/v.height*100 };
+}
+function place(el, r){ el.style.left=r.l+'%'; el.style.top=r.t+'%'; el.style.width=r.w+'%'; el.style.height=r.h+'%'; }
+
+function go(n){
+  n = (n + N) % N;
+  var old = prevIdx;
+  finishFlights();
+
+  /* ảnh của ai đang ở khung nào, trước khi chuyển */
+  var oldSlotOf = {};
+  if(old >= 0 && !reduce){
+    slots.forEach(function(s,k){ oldSlotOf[(old + s.off) % N] = k; });
+  }
+  var oldRects = slots.map(function(s){ return relRect(s.el); });
+
+  cur = n;
+
+  var flown = {};
+  slots.forEach(function(s,k){
+    var person = (cur + s.off) % N;
+    var from = oldSlotOf[person];
+    if(from !== undefined && from !== k){
+      flown[from+'-'+person] = true;
+      /* ảnh cũ trong khung nguồn biến mất ngay (đã có ảnh bay thay thế) */
+      var srcImg = slots[from].el.children[person];
+      snap(srcImg,'gone'); unsnap(srcImg,'gone');
+    }
+  });
+
+  slots.forEach(function(s,k){
+    var show = (cur + s.off) % N;
+    var from = oldSlotOf[show];
+    var flies = (from !== undefined && from !== k);
+    if(flies) s.el.classList.add('hold');
+    [].forEach.call(s.el.children, function(im,i){ im.classList.toggle('on', i===show); });
+
+    if(flies){
+      var fly = document.createElement('div'); fly.className = 'flyer';
+      var im = document.createElement('img'); im.src = PEOPLE[show].photo; im.alt = ''; fly.appendChild(im);
+      place(fly, oldRects[from]);
+      vp.appendChild(fly);
+      void fly.offsetWidth; /* ép trình duyệt vẽ vị trí đầu */
+      place(fly, relRect(s.el));
+      var f = { fly:fly, slot:s };
+      f.t = setTimeout(function(){
+        if(fly.parentNode) fly.parentNode.removeChild(fly);
+        snap(s.el,'snap'); s.el.classList.remove('hold'); unsnap(s.el,'snap');
+        flights = flights.filter(function(x){ return x !== f; });
+      }, 1020);
+      flights.push(f);
+    }
+  });
+
+  [].forEach.call(infos.children, function(d,i){
+    if(i===old && old!==cur){
+      d.classList.add('leaving'); setTimeout(function(){ d.classList.remove('leaving'); }, 550);
+    }
+    d.classList.toggle('on', i===cur);
+  });
+  [].forEach.call(dotsEl.children, function(d,i){ d.classList.toggle('on', i===cur); });
+  slots[0].el.setAttribute('aria-label', PEOPLE[cur].name);
+  prevIdx = cur;
+}
+function restart(){ clearInterval(timer); if(AUTO_MS) timer = setInterval(function(){ go(cur+1); }, AUTO_MS); }
+
+/* bấm vào ảnh nhỏ để chuyển tới người đó */
+slots.forEach(function(s){
+  if(!s.off) return;
+  var act = function(){ go(cur + s.off); restart(); };
+  s.el.addEventListener('click', act);
+  s.el.addEventListener('keydown', function(e){ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); act(); } });
+});
+vp.addEventListener('mouseenter', function(){ clearInterval(timer); });
+vp.addEventListener('mouseleave', restart);
+document.addEventListener('keydown', function(e){
+  if(e.key==='ArrowLeft'){ go(cur-1); restart(); }
+  if(e.key==='ArrowRight'){ go(cur+1); restart(); }
+});
+var x0 = null;
+vp.addEventListener('pointerdown', function(e){ x0 = e.clientX; });
+vp.addEventListener('pointerup', function(e){
+  if(x0===null) return;
+  var dx = e.clientX - x0; x0 = null;
+  if(Math.abs(dx) > 40){ go(cur + (dx<0 ? 1 : -1)); restart(); }
+});
+vp.addEventListener('pointercancel', function(){ x0 = null; });
+
+go(0); restart();
+</script>
+</body>
+</html>
